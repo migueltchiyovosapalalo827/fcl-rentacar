@@ -4,7 +4,6 @@ namespace App\Filament\Resources\Clients\Schemas;
 
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
-use Illuminate\Support\Facades\Hash;
 
 class ClientForm
 {
@@ -27,7 +26,6 @@ class ClientForm
                 TextInput::make('password')
                     ->label('Senha')
                     ->password()
-                    ->dehydrateStateUsing(fn ($state) => Hash::make($state))
                     ->dehydrated(fn ($state) => filled($state))
                     ->required(fn (string $context): bool => $context === 'create')
                     ->minLength(8),

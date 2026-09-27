@@ -2,49 +2,60 @@
 
 namespace App\Filament\Pages;
 
-use App\Models\ReservationReview;
+use App\Filament\Widgets\ReviewsStatsWidget;
+use App\Filament\Widgets\Satisfaction\RecentReviewsWidget;
+use App\Filament\Widgets\Satisfaction\SatisfactionRatingsChartWidget;
 use BackedEnum;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Filament\Widgets\Widget;
+use Filament\Widgets\WidgetConfiguration;
 
 class SatisfactionReport extends Page
 {
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedChartBar;
 
-    protected string $view = 'filament.pages.satisfaction-report';
-
-    protected static ?string $navigationLabel = 'Relatório de Satisfação';
+    protected static ?string $navigationLabel = 'Satisfação';
 
     protected static ?string $title = 'Relatório de Satisfação do Cliente';
 
+    protected static string|\UnitEnum|null $navigationGroup = 'Relatórios';
+
     protected static ?int $navigationSort = 10;
 
-    public function getStats(): array
+    public function getSubheading(): ?string
     {
-        $totalReviews = ReservationReview::count();
-        $avgRating = ReservationReview::avg('rating') ?? 0;
-        
-        $ratings = [
-            5 => ReservationReview::where('rating', 5)->count(),
-            4 => ReservationReview::where('rating', 4)->count(),
-            3 => ReservationReview::where('rating', 3)->count(),
-            2 => ReservationReview::where('rating', 2)->count(),
-            1 => ReservationReview::where('rating', 1)->count(),
-        ];
+        return 'Análise das avaliações e da taxa de satisfação dos clientes.';
+    }
 
-        $recentReviews = ReservationReview::with(['user', 'reservation.car'])
-            ->latest()
-            ->limit(10)
-            ->get();
-
+    /**
+     * @return array<class-string<Widget> | WidgetConfiguration>
+     */
+    public function getWidgets(): array
+    {
         return [
-            'total_reviews' => $totalReviews,
-            'avg_rating' => round($avgRating, 2),
-            'ratings' => $ratings,
-            'recent_reviews' => $recentReviews,
-            'satisfaction_rate' => $totalReviews > 0 
-                ? round((($ratings[5] + $ratings[4]) / $totalReviews) * 100, 1) 
-                : 0,
+            ReviewsStatsWidget::class,
+            SatisfactionRatingsChartWidget::class,
+            RecentReviewsWidget::class,
         ];
+    }
+
+    /**
+     * @return int | array<string, ?int>
+     */
+    public function getColumns(): int | array
+    {
+        return 1;
+    }
+
+    public function content(Schema $schema): Schema
+    {
+        return $schema
+            ->components([
+                Grid::make($this->getColumns())
+                    ->schema(fn (): array => $this->getWidgetsSchemaComponents($this->getWidgets())),
+            ]);
     }
 }

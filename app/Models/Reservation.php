@@ -27,6 +27,7 @@ class Reservation extends Model
         'start_date' => 'datetime',
         'end_date' => 'datetime',
         'with_driver' => 'boolean',
+        'total_amount' => 'decimal:2',
     ];
 
     public function client()

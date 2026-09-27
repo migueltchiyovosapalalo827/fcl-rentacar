@@ -2,10 +2,11 @@
 
 namespace App\Filament\Resources\Cars\Schemas;
 
+use App\Models\Car;
+use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Illuminate\Support\Facades\Storage;
 
 class CarInfolist
 {
@@ -13,52 +14,86 @@ class CarInfolist
     {
         return $schema
             ->components([
-                Section::make('Informações do Veículo')
+                Section::make('Fotos')
                     ->schema([
-                        TextEntry::make('image')
-                            ->label('Imagem')
-                            ->url(fn ($record) => $record->image ? Storage::url($record->image) : null)
-                            ->openUrlInNewTab(),
-                        
-                        TextEntry::make('brand')
-                            ->label('Marca'),
-                        
-                        TextEntry::make('model')
-                            ->label('Modelo'),
-                        
-                        TextEntry::make('plate_number')
-                            ->label('Matrícula'),
-                        
-                        TextEntry::make('price_per_day')
-                            ->label('Preço por Dia')
-                            ->money('AOA'),
-                        
+                        ImageEntry::make('image')
+                            ->label('Foto principal')
+                            ->disk('public')
+                            ->visibility('public')
+                            ->height(220)
+                            ->defaultImageUrl('/images/placeholder-car.png'),
+
+                        ImageEntry::make('photos')
+                            ->label('Galeria')
+                            ->disk('public')
+                            ->visibility('public')
+                            ->height(120),
+                    ])
+                    ->columns(2),
+
+                Section::make('Identificação')
+                    ->schema([
+                        TextEntry::make('brand')->label('Marca'),
+                        TextEntry::make('model')->label('Modelo'),
+                        TextEntry::make('plate_number')->label('Matrícula'),
+                        TextEntry::make('year')->label('Ano'),
+                        TextEntry::make('color')->label('Cor')->placeholder('—'),
+                        TextEntry::make('category')
+                            ->label('Categoria')
+                            ->formatStateUsing(fn (?string $state): string => $state ? (Car::CATEGORIES[$state] ?? $state) : '—'),
+                    ])
+                    ->columns(3),
+
+                Section::make('Estado e preço')
+                    ->schema([
                         TextEntry::make('status')
-                            ->label('Status')
+                            ->label('Estado')
                             ->badge()
                             ->color(fn (string $state): string => match ($state) {
                                 'disponivel' => 'success',
                                 'alugado' => 'warning',
                                 'manutencao' => 'danger',
-                                'inativo' => 'gray',
                                 default => 'gray',
                             })
-                            ->formatStateUsing(fn (string $state): string => match ($state) {
-                                'disponivel' => 'Disponível',
-                                'alugado' => 'Alugado',
-                                'manutencao' => 'Em Manutenção',
-                                'inativo' => 'Inativo',
-                                default => $state,
-                            }),
-                        
-                        TextEntry::make('year')
-                            ->label('Ano'),
-                        
+                            ->formatStateUsing(fn (string $state): string => Car::STATUSES[$state] ?? $state),
+
+                        TextEntry::make('price_per_day')
+                            ->label('Preço por dia')
+                            ->money('AOA'),
+
                         TextEntry::make('km')
                             ->label('Quilometragem')
-                            ->numeric(),
+                            ->numeric()
+                            ->suffix(' km'),
                     ])
-                    ->columns(2),
+                    ->columns(3),
+
+                Section::make('Capacidades')
+                    ->schema([
+                        TextEntry::make('seats')->label('Lugares')->placeholder('—'),
+                        TextEntry::make('doors')->label('Portas')->placeholder('—'),
+                        TextEntry::make('luggage_capacity')->label('Malas')->placeholder('—'),
+                        TextEntry::make('fuel_type')
+                            ->label('Combustível')
+                            ->formatStateUsing(fn (?string $state): string => $state ? (Car::FUEL_TYPES[$state] ?? $state) : '—'),
+                        TextEntry::make('transmission')
+                            ->label('Transmissão')
+                            ->formatStateUsing(fn (?string $state): string => $state ? (Car::TRANSMISSIONS[$state] ?? $state) : '—'),
+                        TextEntry::make('air_conditioning')
+                            ->label('Ar condicionado')
+                            ->badge()
+                            ->formatStateUsing(fn ($state): string => $state ? 'Sim' : 'Não')
+                            ->color(fn ($state): string => $state ? 'success' : 'gray'),
+                    ])
+                    ->columns(3),
+
+                Section::make('Descrição')
+                    ->schema([
+                        TextEntry::make('description')
+                            ->label('Descrição')
+                            ->placeholder('Sem descrição')
+                            ->columnSpanFull(),
+                    ]),
             ]);
     }
 }

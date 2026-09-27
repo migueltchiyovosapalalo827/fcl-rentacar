@@ -12,11 +12,6 @@ class CarFactory extends Factory
 {
     protected $model = Car::class;
 
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         $brands = ['Toyota', 'Honda', 'BMW', 'Mercedes-Benz', 'Audi', 'Volkswagen', 'Ford', 'Nissan', 'Hyundai', 'Kia'];
@@ -35,6 +30,12 @@ class CarFactory extends Factory
 
         $brand = fake()->randomElement($brands);
         $model = fake()->randomElement($models[$brand]);
+        $category = fake()->randomElement(array_keys(Car::CATEGORIES));
+        $seats = match ($category) {
+            'van' => fake()->numberBetween(7, 12),
+            'suv', 'pickup' => fake()->numberBetween(5, 7),
+            default => fake()->numberBetween(4, 5),
+        };
 
         return [
             'brand' => $brand,
@@ -44,7 +45,17 @@ class CarFactory extends Factory
             'status' => fake()->randomElement(['disponivel', 'alugado', 'manutencao', 'inativo']),
             'year' => fake()->numberBetween(2015, 2024),
             'km' => fake()->numberBetween(0, 200000),
-            'image' => fake()->optional()->imageUrl(800, 600, 'cars', true, $brand . ' ' . $model),
+            'image' => null,
+            'description' => fake()->paragraphs(2, true),
+            'color' => fake()->randomElement(['Branco', 'Preto', 'Prata', 'Cinzento', 'Azul', 'Vermelho']),
+            'category' => $category,
+            'seats' => $seats,
+            'doors' => fake()->randomElement([3, 4, 5]),
+            'luggage_capacity' => fake()->numberBetween(1, 5),
+            'fuel_type' => fake()->randomElement(array_keys(Car::FUEL_TYPES)),
+            'transmission' => fake()->randomElement(array_keys(Car::TRANSMISSIONS)),
+            'air_conditioning' => fake()->boolean(85),
+            'photos' => [],
         ];
     }
 
@@ -69,4 +80,3 @@ class CarFactory extends Factory
         ]);
     }
 }
-

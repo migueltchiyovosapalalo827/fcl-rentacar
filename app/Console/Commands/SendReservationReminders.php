@@ -5,8 +5,8 @@ namespace App\Console\Commands;
 use App\Mail\ReservationNotificationMail;
 use App\Models\Notification;
 use App\Models\Reservation;
-use App\Notifications\ReservationStatusNotification;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class SendReservationReminders extends Command
@@ -52,8 +52,15 @@ class SendReservationReminders extends Command
 
             if (!$existingNotification) {
                 $client = $reservation->client;
+                if (! $client) {
+                    continue;
+                }
+
+                $carLabel = trim(($reservation->car?->brand ?? '').' '.($reservation->car?->model ?? '')) ?: 'o veículo';
+                $pickupName = $reservation->pickupLocation?->name ?? 'o local de recolha';
+                $startTime = optional($reservation->start_date)->format('H:i') ?? '--:--';
                 $title = 'Lembrete de Reserva';
-                $message = "Lembrete: Sua reserva #{$reservation->id} começa amanhã às {$reservation->start_date->format('H:i')}. Não se esqueça de retirar o veículo {$reservation->car->brand} {$reservation->car->model} no local de recolha: {$reservation->pickupLocation->name}.";
+                $message = "Lembrete: Sua reserva #{$reservation->id} começa amanhã às {$startTime}. Não se esqueça de retirar o veículo {$carLabel} no local de recolha: {$pickupName}.";
 
                 // Criar notificação no banco de dados
                 Notification::create([
@@ -65,32 +72,19 @@ class SendReservationReminders extends Command
                     'created_at' => now(),
                 ]);
 
-                // Enviar email
-                try {
-                    Mail::to($client->email)->send(
-                        new ReservationNotificationMail(
-                            $reservation,
-                            'alerta',
-                            $title,
-                            $message
-                        )
-                    );
-                } catch (\Exception $e) {
-                    \Log::error('Failed to send reminder email: ' . $e->getMessage());
-                }
-
-                // Enviar notificação push
-                try {
-                    $client->notify(
-                        new ReservationStatusNotification(
-                            $reservation,
-                            'alerta',
-                            $title,
-                            $message
-                        )
-                    );
-                } catch (\Exception $e) {
-                    \Log::error('Failed to send reminder notification: ' . $e->getMessage());
+                if ($client?->email) {
+                    try {
+                        Mail::to($client->email)->send(
+                            new ReservationNotificationMail(
+                                $reservation,
+                                'alerta',
+                                $title,
+                                $message
+                            )
+                        );
+                    } catch (\Exception $e) {
+                        Log::error('Failed to send reminder email: '.$e->getMessage());
+                    }
                 }
 
                 $sentCount++;

@@ -5,38 +5,25 @@ namespace App\Observers;
 use App\Mail\ReservationNotificationMail;
 use App\Models\Notification;
 use App\Models\Reservation;
-use App\Notifications\ReservationStatusNotification;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class ReservationObserver
 {
-    /**
-     * Handle the Reservation "updated" event.
-     */
     public function updated(Reservation $reservation): void
     {
-        // Verificar se o status mudou
         if ($reservation->wasChanged('status')) {
-            $oldStatus = $reservation->getOriginal('status');
-            $newStatus = $reservation->status;
-
-            // Carregar relacionamentos necessários
-            $reservation->load(['car', 'pickupLocation']);
-
-            // Criar notificação baseada no novo status
-            $this->createStatusNotification($reservation, $oldStatus, $newStatus);
+            $reservation->loadMissing(['car', 'client', 'pickupLocation', 'dropoffLocation']);
+            $this->createStatusNotification($reservation, $reservation->status);
         }
     }
 
-    /**
-     * Criar notificação baseada na mudança de status
-     */
-    protected function createStatusNotification(Reservation $reservation, string $oldStatus, string $newStatus): void
+    protected function createStatusNotification(Reservation $reservation, string $newStatus): void
     {
         $messages = [
             'confirmada' => [
                 'title' => 'Reserva Confirmada',
-                'message' => "Sua reserva #{$reservation->id} foi confirmada! O veículo {$reservation->car->brand} {$reservation->car->model} está reservado para você.",
+                'message' => "Sua reserva #{$reservation->id} foi confirmada! O veículo {$reservation->car?->brand} {$reservation->car?->model} está reservado para você.",
             ],
             'ativa' => [
                 'title' => 'Reserva Ativada',
@@ -52,47 +39,35 @@ class ReservationObserver
             ],
         ];
 
-        if (isset($messages[$newStatus])) {
-            $client = $reservation->client;
-            
-            // Criar notificação no banco de dados
-            Notification::create([
-                'user_id' => $reservation->client_id,
-                'title' => $messages[$newStatus]['title'],
-                'message' => $messages[$newStatus]['message'],
-                'type' => 'reserva',
-                'is_read' => false,
-                'created_at' => now(),
-            ]);
+        if (! isset($messages[$newStatus])) {
+            return;
+        }
 
-            // Enviar email
-            try {
-                Mail::to($client->email)->send(
-                    new ReservationNotificationMail(
-                        $reservation,
-                        'reserva',
-                        $messages[$newStatus]['title'],
-                        $messages[$newStatus]['message']
-                    )
-                );
-            } catch (\Exception $e) {
-                // Log error but don't fail
-                \Log::error('Failed to send reservation email: ' . $e->getMessage());
-            }
+        $client = $reservation->client;
+        if (! $client) {
+            return;
+        }
 
-            // Enviar notificação push (database)
-            try {
-                $client->notify(
-                    new ReservationStatusNotification(
-                        $reservation,
-                        'reserva',
-                        $messages[$newStatus]['title'],
-                        $messages[$newStatus]['message']
-                    )
-                );
-            } catch (\Exception $e) {
-                \Log::error('Failed to send reservation notification: ' . $e->getMessage());
-            }
+        Notification::create([
+            'user_id' => $reservation->client_id,
+            'title' => $messages[$newStatus]['title'],
+            'message' => $messages[$newStatus]['message'],
+            'type' => 'reserva',
+            'is_read' => false,
+            'created_at' => now(),
+        ]);
+
+        try {
+            Mail::to($client->email)->send(
+                new ReservationNotificationMail(
+                    $reservation,
+                    'reserva',
+                    $messages[$newStatus]['title'],
+                    $messages[$newStatus]['message']
+                )
+            );
+        } catch (\Exception $e) {
+            Log::error('Failed to send reservation email: '.$e->getMessage());
         }
     }
 }

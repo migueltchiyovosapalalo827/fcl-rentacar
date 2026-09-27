@@ -17,6 +17,12 @@ class Location extends Model
         'active',
     ];
 
+    protected $casts = [
+        'latitude' => 'float',
+        'longitude' => 'float',
+        'active' => 'boolean',
+    ];
+
     public function pickups()
     {
         return $this->hasMany(Reservation::class, 'pickup_location_id');

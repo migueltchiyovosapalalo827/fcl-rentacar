@@ -198,7 +198,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const endDate = new Date(endDateInput.value);
         
         if (startDate && endDate && endDate > startDate) {
-            const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+            const days = Math.max(1, Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)));
             
             let total = pricePerDay * days;
             const driverCost = withDriverCheckbox.checked ? 50 * days : 0;

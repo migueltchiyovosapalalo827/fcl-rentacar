@@ -70,4 +70,27 @@ class User extends Authenticatable
     {
         return $this->hasMany(Reward::class);
     }
+
+    public function syncSpatieRoleFromEnum(): void
+    {
+        $map = [
+            'cliente' => 'client',
+            'gerente' => 'manager',
+            'caixa' => 'manager',
+            'motorista' => 'driver',
+            'tecnico' => 'technician',
+        ];
+
+        if (! isset($map[$this->role])) {
+            return;
+        }
+
+        $spatieRole = $map[$this->role];
+
+        if (! \Spatie\Permission\Models\Role::where('name', $spatieRole)->exists()) {
+            return;
+        }
+
+        $this->syncRoles([$spatieRole]);
+    }
 }

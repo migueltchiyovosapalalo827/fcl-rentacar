@@ -40,7 +40,7 @@ class ReservationController extends Controller
 
     public function update(UpdateReservationRequest $request, Reservation $reservation): JsonResponse
     {
-        $reservation = $this->reservations->update($reservation, $request->validated());
+        $reservation = $this->reservationService->updateReservation($reservation, $request->validated());
         return response()->json($reservation);
     }
 
@@ -68,55 +68,5 @@ class ReservationController extends Controller
         ]);
         $payment = $this->paymentService->registerPayment($reservation, $data);
         return response()->json($payment, 201);
-    }
-}
-
-<?php
-
-namespace App\Http\Controllers\Api;
-
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-
-class ReservationController extends Controller
-{
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
     }
 }

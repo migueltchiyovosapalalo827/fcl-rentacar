@@ -3,47 +3,47 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreDepositRequest;
+use App\Http\Requests\UpdateDepositRequest;
+use App\Models\Deposit;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class DepositController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request): JsonResponse
     {
-        //
+        $perPage = (int) $request->get('per_page', 15);
+        $deposits = Deposit::with('reservation')->latest()->paginate($perPage);
+
+        return response()->json($deposits);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function show(Deposit $deposit): JsonResponse
     {
-        //
+        $deposit->load('reservation');
+
+        return response()->json($deposit);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function store(StoreDepositRequest $request): JsonResponse
     {
-        //
+        $deposit = Deposit::create($request->validated());
+
+        return response()->json($deposit, 201);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(UpdateDepositRequest $request, Deposit $deposit): JsonResponse
     {
-        //
+        $deposit->update($request->validated());
+
+        return response()->json($deposit);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(Deposit $deposit): JsonResponse
     {
-        //
+        $deposit->delete();
+
+        return response()->json(null, 204);
     }
 }

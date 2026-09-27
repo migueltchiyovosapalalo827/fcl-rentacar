@@ -8,6 +8,8 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class ReviewsStatsWidget extends BaseWidget
 {
+    protected ?string $pollingInterval = null;
+
     protected function getStats(): array
     {
         $totalReviews = ReservationReview::count();

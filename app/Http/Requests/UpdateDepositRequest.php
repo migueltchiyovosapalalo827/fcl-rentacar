@@ -6,23 +6,18 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateDepositRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            //
+            'reservation_id' => ['sometimes', 'exists:reservations,id'],
+            'amount' => ['sometimes', 'numeric', 'min:0.01'],
+            'refunded' => ['sometimes', 'boolean'],
+            'refunded_at' => ['nullable', 'date'],
         ];
     }
 }

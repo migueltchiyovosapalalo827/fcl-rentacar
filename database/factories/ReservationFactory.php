@@ -24,7 +24,7 @@ class ReservationFactory extends Factory
     public function definition(): array
     {
         $startDate = fake()->dateTimeBetween('now', '+30 days');
-        $endDate = fake()->dateTimeBetween($startDate, $startDate->format('Y-m-d') . ' +7 days');
+        $endDate = (clone $startDate)->modify('+'.fake()->numberBetween(1, 7).' days');
         
         $days = (int) $startDate->diff($endDate)->format('%a');
         $car = Car::inRandomOrder()->first() ?? Car::factory()->create();

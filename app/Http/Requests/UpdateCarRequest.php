@@ -24,35 +24,17 @@ class UpdateCarRequest extends FormRequest
             'year' => ['sometimes','integer','min:1900','max:2100'],
             'km' => ['sometimes','integer','min:0'],
             'image' => ['sometimes','string','max:2048'],
-        ];
-    }
-}
-
-<?php
-
-namespace App\Http\Requests;
-
-use Illuminate\Foundation\Http\FormRequest;
-
-class UpdateCarRequest extends FormRequest
-{
-    /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return false;
-    }
-
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
-    public function rules(): array
-    {
-        return [
-            //
+            'description' => ['sometimes','nullable','string','max:2000'],
+            'color' => ['sometimes','nullable','string','max:50'],
+            'category' => ['sometimes','nullable','in:economico,compacto,sedan,suv,pickup,luxo,van'],
+            'seats' => ['sometimes','nullable','integer','min:1','max:50'],
+            'doors' => ['sometimes','nullable','integer','min:2','max:6'],
+            'luggage_capacity' => ['sometimes','nullable','integer','min:0','max:20'],
+            'fuel_type' => ['sometimes','nullable','in:gasolina,diesel,hibrido,eletrico'],
+            'transmission' => ['sometimes','nullable','in:manual,automatica'],
+            'air_conditioning' => ['sometimes','boolean'],
+            'photos' => ['sometimes','nullable','array'],
+            'photos.*' => ['string','max:2048'],
         ];
     }
 }

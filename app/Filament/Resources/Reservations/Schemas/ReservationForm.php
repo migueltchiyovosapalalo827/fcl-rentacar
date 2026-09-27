@@ -3,9 +3,6 @@
 namespace App\Filament\Resources\Reservations\Schemas;
 
 use App\Models\Car;
-use App\Models\Driver;
-use App\Models\Location;
-use App\Models\User;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -27,7 +24,18 @@ class ReservationForm
                 
                 Select::make('car_id')
                     ->label('Carro')
-                    ->relationship('car', 'plate_number', fn ($query) => $query->where('status', 'disponivel'))
+                    ->relationship(
+                        'car',
+                        'plate_number',
+                        function ($query, $get) {
+                            $query->where(function ($q) use ($get) {
+                                $q->where('status', 'disponivel');
+                                if ($carId = $get('car_id')) {
+                                    $q->orWhere('id', $carId);
+                                }
+                            });
+                        }
+                    )
                     ->searchable(['brand', 'model', 'plate_number'])
                     ->getOptionLabelFromRecordUsing(fn (Car $record): string => "{$record->brand} {$record->model} - {$record->plate_number}")
                     ->preload()
@@ -40,7 +48,18 @@ class ReservationForm
                 
                 Select::make('driver_id')
                     ->label('Motorista')
-                    ->relationship('driver', 'license_number', fn ($query) => $query->where('availability', 'livre'))
+                    ->relationship(
+                        'driver',
+                        'license_number',
+                        function ($query, $get) {
+                            $query->where(function ($q) use ($get) {
+                                $q->where('availability', 'livre');
+                                if ($driverId = $get('driver_id')) {
+                                    $q->orWhere('id', $driverId);
+                                }
+                            });
+                        }
+                    )
                     ->searchable()
                     ->preload()
                     ->visible(fn ($get) => $get('with_driver'))
@@ -48,14 +67,36 @@ class ReservationForm
                 
                 Select::make('pickup_location_id')
                     ->label('Local de Recolha')
-                    ->relationship('pickupLocation', 'name', fn ($query) => $query->where('active', true))
+                    ->relationship(
+                        'pickupLocation',
+                        'name',
+                        function ($query, $get) {
+                            $query->where(function ($q) use ($get) {
+                                $q->where('active', true);
+                                if ($locationId = $get('pickup_location_id')) {
+                                    $q->orWhere('id', $locationId);
+                                }
+                            });
+                        }
+                    )
                     ->searchable()
                     ->preload()
                     ->required(),
                 
                 Select::make('dropoff_location_id')
                     ->label('Local de Devolução')
-                    ->relationship('dropoffLocation', 'name', fn ($query) => $query->where('active', true))
+                    ->relationship(
+                        'dropoffLocation',
+                        'name',
+                        function ($query, $get) {
+                            $query->where(function ($q) use ($get) {
+                                $q->where('active', true);
+                                if ($locationId = $get('dropoff_location_id')) {
+                                    $q->orWhere('id', $locationId);
+                                }
+                            });
+                        }
+                    )
                     ->searchable()
                     ->preload()
                     ->required(),

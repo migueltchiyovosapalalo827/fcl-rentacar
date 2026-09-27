@@ -18,5 +18,10 @@ class EditEmployee extends EditRecord
             DeleteAction::make(),
         ];
     }
+
+    protected function afterSave(): void
+    {
+        $this->record->syncSpatieRoleFromEnum();
+    }
 }
 

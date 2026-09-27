@@ -71,7 +71,7 @@
     </div>
     
     <div class="content">
-        <p>Olá {{ $reservation->client->name }},</p>
+        <p>Olá {{ $reservation->client->name ?? 'Cliente' }},</p>
         
         <p>{{ $message }}</p>
         
@@ -80,32 +80,32 @@
             
             <div class="detail-row">
                 <span class="label">Veículo:</span>
-                <span class="value">{{ $reservation->car->brand }} {{ $reservation->car->model }}</span>
+                <span class="value">{{ $reservation->car->brand ?? '—' }} {{ $reservation->car->model ?? '' }}</span>
             </div>
             
             <div class="detail-row">
                 <span class="label">Matrícula:</span>
-                <span class="value">{{ $reservation->car->plate_number }}</span>
+                <span class="value">{{ $reservation->car->plate_number ?? '—' }}</span>
             </div>
             
             <div class="detail-row">
                 <span class="label">Data de Início:</span>
-                <span class="value">{{ $reservation->start_date->format('d/m/Y H:i') }}</span>
+                <span class="value">{{ optional($reservation->start_date)->format('d/m/Y H:i') }}</span>
             </div>
             
             <div class="detail-row">
                 <span class="label">Data de Fim:</span>
-                <span class="value">{{ $reservation->end_date->format('d/m/Y H:i') }}</span>
+                <span class="value">{{ optional($reservation->end_date)->format('d/m/Y H:i') }}</span>
             </div>
             
             <div class="detail-row">
                 <span class="label">Local de Recolha:</span>
-                <span class="value">{{ $reservation->pickupLocation->name }}</span>
+                <span class="value">{{ $reservation->pickupLocation->name ?? '—' }}</span>
             </div>
             
             <div class="detail-row">
                 <span class="label">Local de Devolução:</span>
-                <span class="value">{{ $reservation->dropoffLocation->name }}</span>
+                <span class="value">{{ $reservation->dropoffLocation->name ?? '—' }}</span>
             </div>
             
             <div class="detail-row">

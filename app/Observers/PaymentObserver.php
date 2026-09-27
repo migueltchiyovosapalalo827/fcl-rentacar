@@ -5,40 +5,33 @@ namespace App\Observers;
 use App\Mail\ReservationNotificationMail;
 use App\Models\Notification;
 use App\Models\Payment;
-use App\Notifications\ReservationStatusNotification;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class PaymentObserver
 {
-    /**
-     * Handle the Payment "updated" event.
-     */
     public function updated(Payment $payment): void
     {
-        // Verificar se o status mudou para "pago"
         if ($payment->wasChanged('status') && $payment->status === 'pago') {
             $this->createPaymentNotification($payment);
         }
     }
 
-    /**
-     * Handle the Payment "created" event.
-     */
     public function created(Payment $payment): void
     {
-        // Se o pagamento já foi criado como pago
         if ($payment->status === 'pago') {
             $this->createPaymentNotification($payment);
         }
     }
 
-    /**
-     * Criar notificação de pagamento processado
-     */
     protected function createPaymentNotification(Payment $payment): void
     {
-        $reservation = $payment->reservation()->with('client')->first();
-        
+        $reservation = $payment->reservation()->with(['client', 'car', 'pickupLocation', 'dropoffLocation'])->first();
+
+        if (! $reservation || ! $reservation->client) {
+            return;
+        }
+
         $typeMessages = [
             'aluguer' => 'O pagamento do aluguer',
             'caucao' => 'O pagamento da caução',
@@ -48,10 +41,9 @@ class PaymentObserver
 
         $typeMessage = $typeMessages[$payment->type] ?? 'O pagamento';
         $title = 'Pagamento Processado';
-        $message = "{$typeMessage} da reserva #{$reservation->id} no valor de " . number_format($payment->amount, 2) . " AOA foi processado com sucesso.";
+        $message = "{$typeMessage} da reserva #{$reservation->id} no valor de ".number_format((float) $payment->amount, 2).' AOA foi processado com sucesso.';
         $client = $reservation->client;
 
-        // Criar notificação no banco de dados
         Notification::create([
             'user_id' => $reservation->client_id,
             'title' => $title,
@@ -61,7 +53,6 @@ class PaymentObserver
             'created_at' => now(),
         ]);
 
-        // Enviar email
         try {
             Mail::to($client->email)->send(
                 new ReservationNotificationMail(
@@ -72,21 +63,7 @@ class PaymentObserver
                 )
             );
         } catch (\Exception $e) {
-            \Log::error('Failed to send payment email: ' . $e->getMessage());
-        }
-
-        // Enviar notificação push
-        try {
-            $client->notify(
-                new ReservationStatusNotification(
-                    $reservation,
-                    'pagamento',
-                    $title,
-                    $message
-                )
-            );
-        } catch (\Exception $e) {
-            \Log::error('Failed to send payment notification: ' . $e->getMessage());
+            Log::error('Failed to send payment email: '.$e->getMessage());
         }
     }
 }

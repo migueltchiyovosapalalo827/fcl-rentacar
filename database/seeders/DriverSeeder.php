@@ -29,7 +29,12 @@ class DriverSeeder extends Seeder
         }
         
         // Criar alguns motoristas adicionais livres
-        Driver::factory(3)->livre()->create();
+        Driver::factory(3)->livre()->create()->each(function (Driver $driver) use ($driverRole) {
+            $driver->user?->forceFill(['role' => 'motorista'])->save();
+            if ($driverRole && $driver->user) {
+                $driver->user->assignRole($driverRole);
+            }
+        });
     }
 }
 

@@ -22,8 +22,10 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('password'),
                 'phone' => '+244 923 456 789',
                 'address' => 'Luanda, Angola',
+                'role' => 'gerente',
             ]
         );
+        $admin->forceFill(['role' => 'gerente'])->save();
         $admin->assignRole('admin');
 
         // Criar Manager
@@ -34,8 +36,10 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('password'),
                 'phone' => '+244 923 456 790',
                 'address' => 'Luanda, Angola',
+                'role' => 'gerente',
             ]
         );
+        $manager->forceFill(['role' => 'gerente'])->save();
         $manager->assignRole('manager');
 
         // Criar Técnico
@@ -46,20 +50,26 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('password'),
                 'phone' => '+244 923 456 791',
                 'address' => 'Luanda, Angola',
+                'role' => 'tecnico',
             ]
         );
+        $technician->forceFill(['role' => 'tecnico'])->save();
         $technician->assignRole('technician');
 
         // Criar alguns clientes
         $clientRole = Role::where('name', 'client')->first();
-        User::factory(10)->create()->each(function ($user) use ($clientRole) {
-            $user->assignRole($clientRole);
+        User::factory(10)->create(['role' => 'cliente'])->each(function ($user) use ($clientRole) {
+            if ($clientRole) {
+                $user->assignRole($clientRole);
+            }
         });
 
         // Criar alguns motoristas
         $driverRole = Role::where('name', 'driver')->first();
-        User::factory(5)->create()->each(function ($user) use ($driverRole) {
-            $user->assignRole($driverRole);
+        User::factory(5)->create(['role' => 'motorista'])->each(function ($user) use ($driverRole) {
+            if ($driverRole) {
+                $user->assignRole($driverRole);
+            }
         });
     }
 }

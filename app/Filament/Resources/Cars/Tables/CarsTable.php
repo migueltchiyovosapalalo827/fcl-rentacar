@@ -19,8 +19,10 @@ class CarsTable
             ->columns([
                 ImageColumn::make('image')
                     ->label('Imagem')
+                    ->disk('public')
+                    ->visibility('public')
                     ->circular()
-                    ->defaultImageUrl(url('/images/placeholder-car.png')),
+                    ->defaultImageUrl('/images/placeholder-car.png'),
                 
                 TextColumn::make('brand')
                     ->label('Marca')
@@ -52,17 +54,17 @@ class CarsTable
                         'inativo' => 'gray',
                         default => 'gray',
                     })
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'disponivel' => 'Disponível',
-                        'alugado' => 'Alugado',
-                        'manutencao' => 'Em Manutenção',
-                        'inativo' => 'Inativo',
-                        default => $state,
-                    }),
+                    ->formatStateUsing(fn (string $state): string => \App\Models\Car::STATUSES[$state] ?? $state),
                 
-                TextColumn::make('year')
-                    ->label('Ano')
-                    ->sortable(),
+                TextColumn::make('category')
+                    ->label('Categoria')
+                    ->formatStateUsing(fn (?string $state): string => $state ? (\App\Models\Car::CATEGORIES[$state] ?? $state) : '—')
+                    ->toggleable(),
+
+                TextColumn::make('seats')
+                    ->label('Lugares')
+                    ->sortable()
+                    ->toggleable(),
                 
                 TextColumn::make('km')
                     ->label('KM')
@@ -72,12 +74,7 @@ class CarsTable
             ->filters([
                 SelectFilter::make('status')
                     ->label('Status')
-                    ->options([
-                        'disponivel' => 'Disponível',
-                        'alugado' => 'Alugado',
-                        'manutencao' => 'Em Manutenção',
-                        'inativo' => 'Inativo',
-                    ]),
+                    ->options(\App\Models\Car::STATUSES),
             ])
             ->recordActions([
                 ViewAction::make(),
