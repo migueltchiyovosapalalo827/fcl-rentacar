@@ -104,7 +104,7 @@ class CarForm
                             ->options(Car::TRANSMISSIONS),
 
                         Toggle::make('air_conditioning')
-                            ->label('Ar condicionado')
+                            ->label('AC')
                             ->default(true),
                     ])
                     ->columns(3),
